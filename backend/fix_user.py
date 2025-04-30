@@ -20,7 +20,7 @@ load_dotenv()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Conectar ao banco de dados
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/fox_barbearia")
 if not DATABASE_URL:
     logger.error("Erro: DATABASE_URL não configurada no arquivo .env")
     sys.exit(1)
@@ -85,4 +85,41 @@ except Exception as e:
     logger.error(f"❌ Erro ao atualizar/criar usuário admin: {e}")
     sys.exit(1)
 finally:
-    session.close() 
+    session.close()
+
+def fix_user_types():
+    """
+    Atualiza o campo user_type de 'barbeiro' para 'barber' e adiciona campos phone e specialty
+    """
+    db = SessionLocal()
+    
+    try:
+        # Correção de tipo para barbeiros existentes
+        db.execute(
+            text("UPDATE users SET user_type = 'barber' WHERE user_type = 'barbeiro'")
+        )
+
+        # Verificar se as colunas phone e specialty existem
+        result = db.execute(
+            text("SELECT column_name FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'phone'")
+        ).fetchone()
+        
+        # Se as colunas não existirem, adicioná-las
+        if not result:
+            db.execute(text("ALTER TABLE users ADD COLUMN phone VARCHAR"))
+            db.execute(text("ALTER TABLE users ADD COLUMN specialty VARCHAR"))
+            print("Colunas phone e specialty adicionadas à tabela users")
+        
+        # Commit das alterações
+        db.commit()
+        
+        print("Tipos de usuário corrigidos de 'barbeiro' para 'barber' e novos campos adicionados")
+        
+    except Exception as e:
+        db.rollback()
+        print(f"Erro ao atualizar tipos de usuário: {e}")
+    finally:
+        db.close()
+
+if __name__ == "__main__":
+    fix_user_types() 
