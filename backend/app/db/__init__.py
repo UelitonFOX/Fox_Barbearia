@@ -1,0 +1,1 @@
+# Marca o diretório 'db' como um pacote Python. 
