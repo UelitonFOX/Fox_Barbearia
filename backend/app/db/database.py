@@ -1,9 +1,10 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from urllib.parse import quote_plus
 
-from app.core.config import settings
+from backend.app.core.config import settings
 
 # URL do banco de dados com tratamento para caracteres especiais
 database_url = settings.DATABASE_URL
