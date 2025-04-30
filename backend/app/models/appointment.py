@@ -1,17 +1,21 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
-from app.db.database import Base
+from backend.app.db.database import Base
+from datetime import datetime
 
 class Appointment(Base):
     __tablename__ = "appointments"
     
     id = Column(Integer, primary_key=True, index=True)
-    client_name = Column(String, nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     service_id = Column(Integer, ForeignKey("services.id"), nullable=False)
-    scheduled_datetime = Column(DateTime, nullable=False)
-    status = Column(String, nullable=False, default="agendado")  # "agendado", "concluido", "cancelado"
+    client_name = Column(String, nullable=False)
+    contact = Column(String, nullable=True)
+    date_time = Column(DateTime, nullable=False)
+    notes = Column(String, nullable=True)
+    status = Column(String, default="scheduled")  # scheduled, completed, cancelled
+    created_at = Column(DateTime, default=datetime.utcnow)
     
-    # Relacionamentos
+    # Relacionamentos (opcional)
     user = relationship("User", backref="appointments")
-    service = relationship("Service", backref="appointments") 
+    service = relationship("ServiceModel", backref="appointments") 

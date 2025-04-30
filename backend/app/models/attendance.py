@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, Float, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime
-from app.db.database import Base
+from backend.app.db.database import Base
 
 class Attendance(Base):
     __tablename__ = "attendances"
@@ -13,8 +13,8 @@ class Attendance(Base):
     discount_amount = Column(Float, default=0.0)
     final_value = Column(Float, nullable=False)
     payment_method = Column(String, nullable=False)  # "pix", "card", "cash"
-    date_time = Column(DateTime, default=datetime.now)
+    date_time = Column(DateTime, default=datetime.now())
     
-    # Relacionamentos
+    # Relacionamentos (opcional)
     user = relationship("User", backref="attendances")
-    service = relationship("Service", backref="attendances") 
+    service = relationship("ServiceModel", backref="attendances") 

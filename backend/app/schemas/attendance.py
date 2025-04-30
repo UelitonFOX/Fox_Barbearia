@@ -2,6 +2,23 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 
+# --- Schemas Aninhados para Resposta ---
+class UserNested(BaseModel):
+    id: int
+    name: str
+
+    class Config:
+        from_attributes = True
+
+class ServiceNested(BaseModel):
+    id: int
+    name: str
+
+    class Config:
+        from_attributes = True
+
+# --- Schemas Principais ---
+
 # Esquema base para atendimento
 class AttendanceBase(BaseModel):
     user_id: int
@@ -27,6 +44,8 @@ class AttendanceUpdate(BaseModel):
 # Esquema para resposta de atendimento
 class AttendanceResponse(AttendanceBase):
     id: int
+    user: UserNested
+    service: ServiceNested
     
     class Config:
         from_attributes = True 
