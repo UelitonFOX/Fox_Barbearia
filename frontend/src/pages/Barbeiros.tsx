@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiPlus, FiRefreshCw, FiEdit, FiTrash, FiUsers } from 'react-icons/fi';
+import { FiPlus, FiRefreshCw, FiEdit, FiTrash, FiUsers, FiUserPlus, FiMail, FiUserCheck, FiShield } from 'react-icons/fi';
 import { User } from '../services/auth';
 import { 
   fetchBarbeiros, 
@@ -36,9 +36,9 @@ const Barbeiros: React.FC = () => {
       const data = await fetchBarbeiros();
       setBarbeiros(data);
     } catch (err) {
-      setError('Erro ao carregar barbeiros. Por favor, tente novamente.');
-      console.error('Erro ao carregar barbeiros:', err);
-      toast.error('Não foi possível carregar a lista de barbeiros.');
+      setError('Erro ao carregar usuários. Por favor, tente novamente.');
+      console.error('Erro ao carregar usuários:', err);
+      toast.error('Não foi possível carregar a lista de usuários.');
     } finally {
       setLoading(false);
     }
@@ -114,48 +114,83 @@ const Barbeiros: React.FC = () => {
   };
 
   // Componente de cartão de barbeiro
-  const BarbeiroCard = ({ barbeiro }: { barbeiro: User }) => (
-    <div className="bg-white p-4 rounded-lg shadow-md">
-      <h3 className="text-lg font-semibold">{barbeiro.full_name}</h3>
-      <p className="text-gray-600 mb-2">{barbeiro.email}</p>
-      
-      {userIsAdmin && (
-        <div className="flex mt-4">
-          <button 
-            onClick={() => handleEditBarbeiro(barbeiro)}
-            className="flex items-center mr-2 px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-          >
-            <FiEdit className="mr-1" /> Editar
-          </button>
-          <button 
-            onClick={() => handleDeleteBarbeiro(barbeiro.id)}
-            className="flex items-center px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-          >
-            <FiTrash className="mr-1" /> Excluir
-          </button>
+  const BarbeiroCard = ({ barbeiro }: { barbeiro: User }) => {
+    // Determinar cor da borda baseada no tipo de usuário
+    const getBorderColor = () => {
+      return barbeiro.user_type === 'admin' 
+        ? 'border-amber-500' 
+        : 'border-blue-500';
+    };
+
+    // Renderização adaptada ao novo tema escuro
+    return (
+      <div className={`card bg-gray-800 p-4 border-l-4 ${getBorderColor()} transition-all hover:shadow-lg hover:bg-gray-800/80`}>
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="text-lg font-semibold text-white flex items-center">
+              <FiUserCheck className="mr-2 text-primary" />
+              {barbeiro.name}
+            </h3>
+            <p className="text-gray-400 flex items-center mt-1">
+              <FiMail className="mr-2" /> {barbeiro.email}
+            </p>
+          </div>
+          
+          <div className="px-2 py-1 rounded-full bg-gray-700/50 text-xs font-medium flex items-center">
+            {barbeiro.user_type === 'admin' ? (
+              <span className="text-amber-400 flex items-center">
+                <FiShield className="mr-1" /> Administrador
+              </span>
+            ) : (
+              <span className="text-blue-400 flex items-center">
+                <FiUsers className="mr-1" /> Barbeiro
+              </span>
+            )}
+          </div>
         </div>
-      )}
-    </div>
-  );
+        
+        {userIsAdmin && (
+          <div className="flex mt-4 justify-end">
+            <button 
+              onClick={() => handleEditBarbeiro(barbeiro)}
+              className="btn-icon mr-2"
+              title="Editar usuário"
+            >
+              <FiEdit />
+            </button>
+            <button 
+              onClick={() => handleDeleteBarbeiro(barbeiro.id)}
+              className="btn-icon hover:text-red-500"
+              title="Excluir usuário"
+            >
+              <FiTrash />
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // Exibir carregamento
   if (loading && barbeiros.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">Usuários</h1>
+      <div className="flex justify-center items-center h-64">
         <Spinner message="Carregando usuários..." />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="bg-gray-900 p-4 rounded-md text-white">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Usuários</h1>
+        <h1 className="text-2xl font-bold flex items-center">
+          <FiUsers className="mr-2 text-primary" /> Usuários
+        </h1>
         <div className="flex">
           <button
             onClick={loadBarbeiros}
-            className="flex items-center mr-2 px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+            className="btn-secondary flex items-center mr-2"
+            title="Atualizar lista"
           >
             <FiRefreshCw className="mr-2" /> Atualizar
           </button>
@@ -163,24 +198,26 @@ const Barbeiros: React.FC = () => {
           {userIsAdmin && (
             <button
               onClick={handleAddBarbeiro}
-              className="flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors"
+              className="btn flex items-center"
+              title="Adicionar novo usuário"
             >
-              <FiPlus className="mr-2" /> Novo Usuário
+              <FiUserPlus className="mr-2" /> Novo Usuário
             </button>
           )}
         </div>
       </div>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-          <span className="block sm:inline">{error}</span>
+        <div className="bg-red-900/30 border border-red-800 p-4 rounded-md mb-6">
+          <span className="text-white">{error}</span>
         </div>
       )}
 
       {showForm ? (
-        <div className="mb-8 p-6 bg-white rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">
-            {selectedBarbeiro ? 'Editar Barbeiro' : 'Adicionar Barbeiro'}
+        <div className="card bg-gray-800 p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4 flex items-center">
+            <FiUserPlus className="mr-2 text-primary" />
+            {selectedBarbeiro ? 'Editar Usuário' : 'Adicionar Usuário'}
           </h2>
           <BarbeiroForm
             barbeiro={selectedBarbeiro || undefined}
@@ -191,24 +228,39 @@ const Barbeiros: React.FC = () => {
       ) : (
         <>
           {barbeiros.length === 0 ? (
-            <div className="text-center py-10">
-              <FiUsers className="mx-auto text-4xl text-gray-400 mb-4" /> 
-              <p className="text-gray-500 mb-4">Nenhum usuário cadastrado.</p>
+            <div className="text-center py-10 card bg-gray-800 border border-gray-700">
+              <FiUsers className="mx-auto text-4xl text-gray-500 mb-4" /> 
+              <p className="text-gray-300 mb-4">Nenhum usuário cadastrado.</p>
               {userIsAdmin && (
                 <button
                   onClick={handleAddBarbeiro}
-                  className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors"
+                  className="btn inline-flex items-center"
                 >
-                  <FiPlus className="inline mr-1" /> Adicionar Usuário
+                  <FiUserPlus className="mr-2" /> Adicionar Usuário
                 </button>
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {barbeiros.map(barbeiro => (
-                <BarbeiroCard key={barbeiro.id} barbeiro={barbeiro} />
-              ))}
-            </div>
+            <>
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-gray-400">
+                  Total: <span className="text-white font-medium">{barbeiros.length} usuários</span>
+                </p>
+                <div className="flex">
+                  <span className="text-xs px-2 py-1 rounded-full bg-amber-900/20 text-amber-400 mr-2 flex items-center">
+                    <FiShield className="mr-1" /> {barbeiros.filter(b => b.user_type === 'admin').length} admins
+                  </span>
+                  <span className="text-xs px-2 py-1 rounded-full bg-blue-900/20 text-blue-400 flex items-center">
+                    <FiUsers className="mr-1" /> {barbeiros.filter(b => b.user_type === 'barber').length} barbeiros
+                  </span>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {barbeiros.map(barbeiro => (
+                  <BarbeiroCard key={barbeiro.id} barbeiro={barbeiro} />
+                ))}
+              </div>
+            </>
           )}
         </>
       )}

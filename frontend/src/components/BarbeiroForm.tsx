@@ -1,5 +1,6 @@
 import React, { useState, useEffect, ReactNode } from 'react';
 import { User } from '../services/auth';
+import { FiUser, FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 
 interface BarbeiroFormProps {
   barbeiro?: User;
@@ -15,12 +16,13 @@ const BarbeiroForm: React.FC<BarbeiroFormProps> = ({ barbeiro, onSubmit, onCance
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
   const isEditing = !!barbeiro;
 
   useEffect(() => {
     if (barbeiro) {
       setFormData({
-        name: barbeiro.full_name,
+        name: barbeiro.name,
         email: barbeiro.email,
         password: ''
       });
@@ -75,65 +77,90 @@ const BarbeiroForm: React.FC<BarbeiroFormProps> = ({ barbeiro, onSubmit, onCance
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="text-white">
       <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
+        <label className="block text-gray-300 text-sm font-medium mb-2" htmlFor="name">
           Nome completo
         </label>
-        <input
-          type="text"
-          id="name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          className={`w-full px-3 py-2 border rounded-md ${
-            errors.name ? 'border-red-500' : 'border-gray-300'
-          } focus:outline-none focus:ring-1 focus:ring-primary`}
-          placeholder="Nome completo do usuário"
-        />
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <FiUser className="text-gray-400" />
+          </div>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            className={`w-full pl-10 px-3 py-2 bg-gray-700 border rounded-md ${
+              errors.name ? 'border-red-500' : 'border-gray-600'
+            } focus:outline-none focus:ring-1 focus:ring-primary text-white`}
+            placeholder="Nome completo do usuário"
+          />
+        </div>
         {errors.name && (
-          <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+          <p className="text-red-400 text-xs mt-1">{errors.name}</p>
         )}
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+        <label className="block text-gray-300 text-sm font-medium mb-2" htmlFor="email">
           Email
         </label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          className={`w-full px-3 py-2 border rounded-md ${
-            errors.email ? 'border-red-500' : 'border-gray-300'
-          } focus:outline-none focus:ring-1 focus:ring-primary`}
-          placeholder="email@exemplo.com"
-        />
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <FiMail className="text-gray-400" />
+          </div>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            className={`w-full pl-10 px-3 py-2 bg-gray-700 border rounded-md ${
+              errors.email ? 'border-red-500' : 'border-gray-600'
+            } focus:outline-none focus:ring-1 focus:ring-primary text-white`}
+            placeholder="email@exemplo.com"
+          />
+        </div>
         {errors.email && (
-          <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+          <p className="text-red-400 text-xs mt-1">{errors.email}</p>
         )}
       </div>
 
       <div className="mb-6">
-        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+        <label className="block text-gray-300 text-sm font-medium mb-2" htmlFor="password">
           Senha {isEditing ? '(Deixe em branco para não alterar)' : ''}
         </label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          className={`w-full px-3 py-2 border rounded-md ${
-            errors.password ? 'border-red-500' : 'border-gray-300'
-          } focus:outline-none focus:ring-1 focus:ring-primary`}
-          placeholder={isEditing ? 'Nova senha (opcional)' : 'Senha (mínimo 6 caracteres)'}
-        />
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <FiLock className="text-gray-400" />
+          </div>
+          <input
+            type={showPassword ? "text" : "password"}
+            id="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            className={`w-full pl-10 pr-10 px-3 py-2 bg-gray-700 border rounded-md ${
+              errors.password ? 'border-red-500' : 'border-gray-600'
+            } focus:outline-none focus:ring-1 focus:ring-primary text-white`}
+            placeholder={isEditing ? 'Nova senha (opcional)' : 'Senha (mínimo 6 caracteres)'}
+          />
+          <div 
+            className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-gray-400 hover:text-white"
+            onClick={togglePasswordVisibility}
+          >
+            {showPassword ? <FiEyeOff /> : <FiEye />}
+          </div>
+        </div>
         {errors.password && (
-          <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+          <p className="text-red-400 text-xs mt-1">{errors.password}</p>
         )}
       </div>
 
@@ -141,13 +168,13 @@ const BarbeiroForm: React.FC<BarbeiroFormProps> = ({ barbeiro, onSubmit, onCance
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+          className="btn-secondary"
         >
           Cancelar
         </button>
         <button
           type="submit"
-          className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors"
+          className="btn"
         >
           {barbeiro ? 'Atualizar' : 'Adicionar'}
         </button>
