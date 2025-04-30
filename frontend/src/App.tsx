@@ -7,6 +7,14 @@ import ProtectedRoute from './components/ProtectedRoute';
 // Páginas
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import Services from './pages/Services';
+import Attendances from './pages/Attendances';
+import NewAttendance from './pages/NewAttendance';
+import TodayAttendances from './pages/TodayAttendances';
+import Appointments from './pages/Appointments';
+import Reports from './pages/Reports';
+import Barbeiros from './pages/Barbeiros';
+import Profile from './pages/Profile';
 
 // Página "Em Construção"
 const UnderConstruction = ({ title }: { title: string }) => (
@@ -35,15 +43,18 @@ function App() {
         {/* Rotas protegidas */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/atendimentos" element={<UnderConstruction title="Atendimentos" />} />
-          <Route path="/atendimentos/novo" element={<UnderConstruction title="Novo Atendimento" />} />
-          <Route path="/agenda" element={<UnderConstruction title="Agenda" />} />
+          <Route path="/atendimentos" element={<Attendances />} />
+          <Route path="/atendimentos/novo" element={<NewAttendance />} />
+          <Route path="/atendimentos/hoje" element={<TodayAttendances />} />
+          <Route path="/agenda" element={<Appointments />} />
+          <Route path="/servicos" element={<Services />} />
+          <Route path="/relatorios" element={<Reports />} />
+          <Route path="/perfil" element={<Profile />} />
         </Route>
 
         {/* Rotas protegidas que requerem admin */}
         <Route element={<ProtectedRoute requireAdmin />}>
-          <Route path="/servicos" element={<UnderConstruction title="Serviços" />} />
-          <Route path="/usuarios" element={<UnderConstruction title="Usuários" />} />
+          <Route path="/usuarios" element={<Barbeiros />} />
         </Route>
 
         {/* Rota não encontrada */}
