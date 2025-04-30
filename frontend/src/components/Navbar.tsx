@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout, isAdmin } from '../services/auth';
-import { FiMenu, FiX, FiUser, FiLogOut, FiCalendar, FiScissors, FiBarChart2, FiUsers, FiSettings } from 'react-icons/fi';
+import { FiMenu, FiX, FiUser, FiLogOut, FiCalendar, FiScissors, FiBarChart2, FiUsers, FiSettings, FiClock, FiPieChart, FiGrid, FiClipboard, FiTrendingUp, FiTool } from 'react-icons/fi';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,7 +11,7 @@ const Navbar: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    window.location.href = '/';
   };
 
   const toggleMenu = () => {
@@ -39,24 +39,32 @@ const Navbar: React.FC = () => {
             <Link to="/atendimentos" className="hover:text-primary transition">
               <FiScissors className="inline mr-1" /> Atendimentos
             </Link>
+            <Link to="/atendimentos/hoje" className="hover:text-primary transition">
+              <FiClock className="inline mr-1" /> Hoje
+            </Link>
             <Link to="/agenda" className="hover:text-primary transition">
               <FiCalendar className="inline mr-1" /> Agenda
             </Link>
+            <Link to="/servicos" className="hover:text-primary transition">
+              <FiSettings className="inline mr-1" /> Serviços
+            </Link>
+            <Link to="/relatorios" className="hover:text-primary transition">
+              <FiPieChart className="inline mr-1" /> Relatórios
+            </Link>
             {userIsAdmin && (
               <>
-                <Link to="/servicos" className="hover:text-primary transition">
-                  <FiSettings className="inline mr-1" /> Serviços
-                </Link>
                 <Link to="/usuarios" className="hover:text-primary transition">
                   <FiUsers className="inline mr-1" /> Usuários
                 </Link>
               </>
             )}
             <div className="ml-4 pl-4 border-l border-gray-700 flex items-center">
-              <span className="text-sm mr-3">{user?.name}</span>
+              <Link to="/perfil" className="text-sm font-medium hover:text-orange-400 transition duration-200">
+                 {user?.username || user?.name}
+              </Link>
               <button 
                 onClick={handleLogout} 
-                className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition"
+                className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition ml-3"
                 title="Sair"
               >
                 <FiLogOut />
@@ -83,7 +91,9 @@ const Navbar: React.FC = () => {
             <div className="flex items-center justify-between py-3 border-b border-gray-700">
               <div className="flex items-center">
                 <FiUser className="text-primary mr-2" />
-                <span>{user?.name}</span>
+                <Link to="/perfil" className="text-sm font-medium hover:text-orange-400 transition duration-200">
+                  {user?.username || user?.name}
+                </Link>
               </div>
               <button 
                 onClick={handleLogout}
@@ -100,19 +110,28 @@ const Navbar: React.FC = () => {
               <Link to="/atendimentos" className="py-2 hover:text-primary transition" onClick={closeMenu}>
                 <FiScissors className="inline mr-2" /> Atendimentos
               </Link>
+              <Link to="/atendimentos/hoje" className="py-2 hover:text-primary transition" onClick={closeMenu}>
+                <FiClock className="inline mr-2" /> Hoje
+              </Link>
               <Link to="/agenda" className="py-2 hover:text-primary transition" onClick={closeMenu}>
                 <FiCalendar className="inline mr-2" /> Agenda
               </Link>
+              <Link to="/servicos" className="py-2 hover:text-primary transition" onClick={closeMenu}>
+                <FiSettings className="inline mr-2" /> Serviços
+              </Link>
+              <Link to="/relatorios" className="py-2 hover:text-primary transition" onClick={closeMenu}>
+                <FiPieChart className="inline mr-2" /> Relatórios
+              </Link>
               {userIsAdmin && (
                 <>
-                  <Link to="/servicos" className="py-2 hover:text-primary transition" onClick={closeMenu}>
-                    <FiSettings className="inline mr-2" /> Serviços
-                  </Link>
                   <Link to="/usuarios" className="py-2 hover:text-primary transition" onClick={closeMenu}>
                     <FiUsers className="inline mr-2" /> Usuários
                   </Link>
                 </>
               )}
+              <Link to="/perfil" className="py-2 hover:text-primary transition" onClick={closeMenu}>
+                <FiUser className="inline mr-2" /> Perfil
+              </Link>
             </div>
           </div>
         </div>
