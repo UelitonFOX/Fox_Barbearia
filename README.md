@@ -12,7 +12,7 @@ Desenvolvido em React/TypeScript (frontend) e FastAPI (backend), com banco de da
 - Dashboard com total de atendimentos e faturamento diário
 - Relatórios diários, semanais e mensais
 - Controle de caixa diário
-- Agenda de horários (agendamentos futuros)
+- Agenda de horários (agendamentos futuros) com layout moderno e intuitivo
 - Cadastro de serviços padrão
 - Opção de aplicar desconto por atendimento
 - Layout responsivo para celular e desktop
@@ -129,7 +129,7 @@ Desenvolvido em React/TypeScript (frontend) e FastAPI (backend), com banco de da
 - [x] Dashboard (resumo diário)
 - [x] Cadastro de Atendimento (com desconto opcional)
 - [x] Relatório de Atendimentos
-- [x] Agenda de Agendamentos
+- [x] Agenda de Agendamentos com layout moderno
 - [x] Tela de Cadastro de Serviços
 - [x] Controle de Caixa Diário
 - [x] Permissões de Usuário
@@ -237,15 +237,18 @@ A página de Serviços permite:
 ### Agenda de Agendamentos
 
 Na página de Agenda você pode:
-1. Visualizar todos os agendamentos por data
-2. Filtrar agendamentos por data específica
-3. Adicionar novos agendamentos com:
+1. Visualizar todos os agendamentos por data em um layout moderno e intuitivo
+2. Navegar entre dias usando controles rápidos de anterior/próximo
+3. Identificar facilmente o status dos agendamentos através de cores indicativas
+4. Filtrar agendamentos por data específica
+5. Adicionar novos agendamentos com:
    - Nome do cliente
    - Serviço desejado
    - Data e hora
    - Barbeiro responsável (administrador pode escolher qualquer barbeiro)
-4. Editar agendamentos existentes
-5. Cancelar agendamentos
+   - Contato do cliente e anotações adicionais
+6. Editar agendamentos existentes
+7. Cancelar agendamentos
 
 ### Relatórios
 
@@ -278,6 +281,15 @@ Se você estiver vendo uma tela preta na página de atendimentos (http://localho
 Para aplicar a correção:
 1. Certifique-se de que o frontend está rodando com a versão mais recente do código
 2. Se o problema persistir, limpe o cache do navegador (Ctrl+F5)
+
+### Atualizações Recentes
+
+A página de Agenda (http://localhost:5175/agenda) recebeu uma atualização significativa no layout:
+- Design moderno com melhor organização dos elementos
+- Indicadores visuais por cores para cada status de agendamento
+- Navegação simplificada entre dias
+- Melhor visualização das informações de contato e serviço
+- Compatibilidade aprimorada com dispositivos móveis
 
 ### Problema: Páginas de relatórios e agenda não carregam dados do banco
 

@@ -11,6 +11,7 @@
 - [x] Agenda de agendamentos futuros
 - [x] Relatório detalhado por período (dia, semana, mês)
 - [x] Lógica para controle de caixa diário
+- [x] Modernização do layout da página de Agenda
 
 ### Próximas Implementações
 - [ ] Exportação de relatórios para PDF
@@ -93,6 +94,8 @@
 - [x] Componente de loading (Spinner)
 - [x] Mensagens de feedback com toast
 - [x] Tratamento de "empty states"
+- [x] Layout moderno e intuitivo para a página de Agenda
+- [x] Indicadores visuais de status por cores
 
 ---
 
@@ -104,6 +107,7 @@
 - [x] Alinhamento de interfaces TypeScript com modelos do backend
 - [x] Correção na resposta de autenticação
 - [x] Tratamento de erros consistente no frontend
+- [x] Melhorias de contraste na página de Agenda
 
 ---
 
@@ -114,6 +118,7 @@
 4. Implementar sistema de notificações
 5. Otimizar o carregamento da aplicação
 6. Melhorar a segurança do sistema
+7. Estender o novo layout para as outras páginas do sistema
 
 ---
 
