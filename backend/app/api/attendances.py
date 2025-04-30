@@ -3,14 +3,15 @@ from datetime import datetime, date
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 
-from app.db.database import get_db
-from app.models.attendance import Attendance
-from app.models.user import User
-from app.schemas.attendance import AttendanceCreate, AttendanceResponse, AttendanceUpdate
-from app.core.deps import get_admin_user, get_current_user
+from backend.app.db.database import get_db
+from backend.app.models.attendance import Attendance
+from backend.app.models.user import User
+from backend.app.schemas.attendance import AttendanceCreate, AttendanceResponse, AttendanceUpdate
+from backend.app.core.deps import get_admin_user, get_current_user
 
-router = APIRouter(prefix="/attendances", tags=["Atendimentos"])
+router = APIRouter(tags=["Atendimentos"])
 
 @router.post("/", response_model=AttendanceResponse, status_code=201)
 def create_attendance(
@@ -55,7 +56,10 @@ def get_attendances(
     """
     Listar atendimentos com filtros
     """
-    query = db.query(Attendance)
+    query = db.query(Attendance).options(
+        joinedload(Attendance.user),
+        joinedload(Attendance.service)
+    )
     
     # Filtrar por data
     if start_date:
@@ -152,48 +156,25 @@ def delete_attendance(
     
     return None
 
-@router.get("/summary/daily", response_model=dict)
-def get_daily_summary(
-    date: Optional[date] = None,
+# --- ROTA DE LIMPEZA (APENAS PARA DESENVOLVIMENTO/SETUP) ---
+@router.delete("/clear-all", status_code=204)
+def delete_all_attendances(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_admin_user) # Somente admin
 ):
     """
-    Resumo diário de atendimentos
+    [ADMIN] Exclui TODOS os registros de atendimento da tabela.
+    Use com extremo cuidado!
     """
-    query_date = date or datetime.now().date()
-    
-    # Base da query
-    query = db.query(
-        func.count(Attendance.id).label("total_count"),
-        func.sum(Attendance.original_value).label("total_original"),
-        func.sum(Attendance.discount_amount).label("total_discount"),
-        func.sum(Attendance.final_value).label("total_final")
-    ).filter(func.date(Attendance.date_time) == query_date)
-    
-    # Se não for admin, filtra pelos atendimentos do próprio usuário
-    if current_user.user_type != "admin":
-        query = query.filter(Attendance.user_id == current_user.id)
-    
-    result = query.first()
-    
-    # Processamento por forma de pagamento
-    payment_query = db.query(
-        Attendance.payment_method,
-        func.sum(Attendance.final_value).label("total")
-    ).filter(func.date(Attendance.date_time) == query_date)
-    
-    if current_user.user_type != "admin":
-        payment_query = payment_query.filter(Attendance.user_id == current_user.id)
-    
-    payment_totals = payment_query.group_by(Attendance.payment_method).all()
-    payment_summary = {method: float(total) for method, total in payment_totals}
-    
-    return {
-        "date": query_date.isoformat(),
-        "total_attendances": result.total_count or 0,
-        "total_original": float(result.total_original or 0),
-        "total_discount": float(result.total_discount or 0),
-        "total_final": float(result.total_final or 0),
-        "payment_summary": payment_summary
-    } 
+    try:
+        num_deleted = db.query(Attendance).delete()
+        db.commit()
+        print(f"Todos os {num_deleted} atendimentos foram excluídos por {current_user.email}.")
+        return None
+    except Exception as e:
+        db.rollback()
+        print(f"Erro ao excluir todos os atendimentos: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erro interno ao tentar limpar os atendimentos"
+        ) 

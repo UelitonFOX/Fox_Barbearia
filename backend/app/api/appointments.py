@@ -3,14 +3,16 @@ from datetime import datetime, date, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+import traceback
+import sys
 
-from app.db.database import get_db
-from app.models.appointment import Appointment
-from app.models.user import User
-from app.schemas.appointment import AppointmentCreate, AppointmentResponse, AppointmentUpdate
-from app.core.deps import get_admin_user, get_current_user
+from backend.app.db.database import get_db
+from backend.app.models.appointment import Appointment
+from backend.app.models.user import User
+from backend.app.schemas.appointment import AppointmentCreate, AppointmentResponse, AppointmentUpdate
+from backend.app.core.deps import get_admin_user, get_current_user
 
-router = APIRouter(prefix="/appointments", tags=["Agendamentos"])
+router = APIRouter(tags=["Agendamentos"])
 
 @router.post("/", response_model=AppointmentResponse, status_code=201)
 def create_appointment(
@@ -21,37 +23,49 @@ def create_appointment(
     """
     Criar novo agendamento
     """
-    # Se não for admin, usa o ID do usuário logado
-    if current_user.user_type != "admin":
-        appointment_in.user_id = current_user.id
-    
-    # Verificar se já existe agendamento no mesmo horário para o mesmo barbeiro
-    existing = db.query(Appointment).filter(
-        Appointment.user_id == appointment_in.user_id,
-        Appointment.scheduled_datetime == appointment_in.scheduled_datetime,
-        Appointment.status == "agendado"
-    ).first()
-    
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Já existe um agendamento para este barbeiro neste horário"
+    try:
+        print(f"DEBUG - Criando agendamento: {appointment_in}")
+        
+        # Se não for admin, usa o ID do usuário logado
+        if current_user.user_type != "admin":
+            appointment_in.user_id = current_user.id
+        
+        # Verificar se já existe agendamento no mesmo horário para o mesmo barbeiro
+        existing = db.query(Appointment).filter(
+            Appointment.user_id == appointment_in.user_id,
+            Appointment.date_time == appointment_in.date_time,
+            Appointment.status == "scheduled"
+        ).first()
+        
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Já existe um agendamento para este barbeiro neste horário"
+            )
+        
+        # Criar agendamento
+        print(f"DEBUG - Criando objeto Appointment")
+        db_appointment = Appointment(
+            client_name=appointment_in.client_name,
+            user_id=appointment_in.user_id,
+            service_id=appointment_in.service_id,
+            date_time=appointment_in.date_time,
+            contact=appointment_in.contact,
+            notes=appointment_in.notes,
+            status="scheduled"
         )
-    
-    # Criar agendamento
-    db_appointment = Appointment(
-        client_name=appointment_in.client_name,
-        user_id=appointment_in.user_id,
-        service_id=appointment_in.service_id,
-        scheduled_datetime=appointment_in.scheduled_datetime,
-        status=appointment_in.status
-    )
-    
-    db.add(db_appointment)
-    db.commit()
-    db.refresh(db_appointment)
-    
-    return db_appointment
+        
+        print(f"DEBUG - Adicionando ao banco")
+        db.add(db_appointment)
+        db.commit()
+        db.refresh(db_appointment)
+        
+        print(f"DEBUG - Retornando agendamento criado: {db_appointment}")
+        return db_appointment
+    except Exception as e:
+        print(f"ERRO na criação de agendamento: {str(e)}", file=sys.stderr)
+        print(f"Detalhes: {traceback.format_exc()}", file=sys.stderr)
+        raise
 
 @router.get("/", response_model=List[AppointmentResponse])
 def get_appointments(
@@ -65,40 +79,48 @@ def get_appointments(
     """
     Listar agendamentos com filtros
     """
-    query = db.query(Appointment)
-    
-    # Filtros de data
-    today = datetime.now().date()
-    if start_date:
-        query = query.filter(func.date(Appointment.scheduled_datetime) >= start_date)
-    else:
-        # Se não informar data inicial, mostra a partir de hoje
-        query = query.filter(func.date(Appointment.scheduled_datetime) >= today)
-    
-    if end_date:
-        query = query.filter(func.date(Appointment.scheduled_datetime) <= end_date)
-    else:
-        # Se não informar data final, mostra até uma semana à frente
-        query = query.filter(
-            func.date(Appointment.scheduled_datetime) <= today + timedelta(days=7)
-        )
-    
-    # Filtro de usuário (barbeiro)
-    if user_id and current_user.user_type == "admin":
-        query = query.filter(Appointment.user_id == user_id)
-    elif current_user.user_type != "admin":
-        # Se não for admin, só vê seus próprios agendamentos
-        query = query.filter(Appointment.user_id == current_user.id)
-    
-    # Filtro de status
-    if status:
-        query = query.filter(Appointment.status == status)
-    
-    # Ordenar por data
-    query = query.order_by(Appointment.scheduled_datetime.asc())
-    
-    appointments = query.all()
-    return appointments
+    try:
+        print(f"DEBUG - Listando agendamentos")
+        query = db.query(Appointment)
+        
+        # Filtros de data
+        today = datetime.now().date()
+        if start_date:
+            query = query.filter(func.date(Appointment.date_time) >= start_date)
+        else:
+            # Se não informar data inicial, mostra a partir de hoje
+            query = query.filter(func.date(Appointment.date_time) >= today)
+        
+        if end_date:
+            query = query.filter(func.date(Appointment.date_time) <= end_date)
+        else:
+            # Se não informar data final, mostra até uma semana à frente
+            query = query.filter(
+                func.date(Appointment.date_time) <= today + timedelta(days=7)
+            )
+        
+        # Filtro de usuário (barbeiro)
+        if user_id and current_user.user_type == "admin":
+            query = query.filter(Appointment.user_id == user_id)
+        elif current_user.user_type != "admin":
+            # Se não for admin, só vê seus próprios agendamentos
+            query = query.filter(Appointment.user_id == current_user.id)
+        
+        # Filtro de status
+        if status:
+            query = query.filter(Appointment.status == status)
+        
+        # Ordenar por data
+        query = query.order_by(Appointment.date_time.asc())
+        
+        print(f"DEBUG - Executando query SQL")
+        appointments = query.all()
+        print(f"DEBUG - Retornando {len(appointments)} agendamentos")
+        return appointments
+    except Exception as e:
+        print(f"ERRO ao listar agendamentos: {str(e)}", file=sys.stderr)
+        print(f"Detalhes: {traceback.format_exc()}", file=sys.stderr)
+        raise
 
 @router.get("/{appointment_id}", response_model=AppointmentResponse)
 def get_appointment(
