@@ -1,7 +1,7 @@
 # 🦊 Fox Barbearia - Sistema Interno
 
 Sistema interno para gestão de atendimentos da Fox Barbearia.  
-Desenvolvido em React (frontend) e Flask ou FastAPI (backend), com banco de dados Supabase.
+Desenvolvido em React/TypeScript (frontend) e FastAPI (backend), com banco de dados PostgreSQL no Supabase.
 
 ---
 
@@ -22,61 +22,68 @@ Desenvolvido em React (frontend) e Flask ou FastAPI (backend), com banco de dado
 
 ## 🛠️ Tecnologias Utilizadas
 
-- **Frontend:** React + Tailwind CSS
-- **Backend:** Flask ou FastAPI
-- **Banco de Dados:** Supabase (PostgreSQL gerenciado)
+- **Frontend:** React 18 + TypeScript + Tailwind CSS + Vite
+- **Backend:** FastAPI (Python 3.10+)
+- **Banco de Dados:** PostgreSQL (hospedado no Supabase)
+- **Autenticação:** JWT + Supabase Auth
+- **Gráficos:** Chart.js
 - **API:** RESTful API
 
 ---
 
-## 📄 Modelagem de Banco de Dados (Supabase)
+## 📄 Modelagem de Banco de Dados
 
 ### Tabelas:
 
-#### `usuarios`
+#### `users`
 | Campo | Tipo | Descrição |
 |:------|:-----|:----------|
 | id | PK | Identificador único |
-| nome | String | Nome do usuário |
-| email | String (opcional) | Email do usuário |
-| senha | Hash | Senha criptografada |
-| tipo_usuario | Enum (`admin` ou `barbeiro`) | Nível de permissão |
-| ativo | Boolean | Se o usuário está ativo |
+| name | String | Nome do usuário |
+| email | String | Email do usuário |
+| username | String | Nome de usuário para login |
+| password | Hash | Senha criptografada |
+| user_type | Enum (`admin` ou `barber`) | Nível de permissão |
+| active | Boolean | Se o usuário está ativo |
 
 ---
 
-#### `servicos`
+#### `services`
 | Campo | Tipo | Descrição |
 |:------|:-----|:----------|
 | id | PK | Identificador único |
-| nome_servico | String | Nome do serviço |
-| preco_padrao | Decimal | Valor padrão do serviço |
+| name | String | Nome do serviço |
+| price | Decimal | Valor padrão do serviço |
+| duration_minutes | Integer | Duração do serviço em minutos |
+| description | Text | Descrição do serviço (opcional) |
 
 ---
 
-#### `atendimentos`
+#### `attendances`
 | Campo | Tipo | Descrição |
 |:------|:-----|:----------|
 | id | PK | Identificador único |
-| usuario_id | FK (usuarios) | Usuário que realizou |
-| servico_id | FK (servicos) | Serviço realizado |
-| valor_original | Decimal | Valor do serviço antes do desconto |
-| desconto_aplicado | Decimal | Valor de desconto aplicado |
-| valor_final | Decimal | Valor final cobrado |
-| forma_pagamento | Enum (Pix, Cartão, Dinheiro) | Forma de pagamento |
-| data_hora_atendimento | Timestamp | Data e hora do atendimento |
+| user_id | FK (users) | Usuário que realizou |
+| service_id | FK (services) | Serviço realizado |
+| original_value | Decimal | Valor do serviço antes do desconto |
+| discount_amount | Decimal | Valor de desconto aplicado |
+| final_value | Decimal | Valor final cobrado |
+| payment_method | Enum (`pix`, `card`, `cash`) | Forma de pagamento |
+| date_time | Timestamp | Data e hora do atendimento |
 
 ---
 
-#### `agendamentos`
+#### `appointments`
 | Campo | Tipo | Descrição |
 |:------|:-----|:----------|
 | id | PK | Identificador único |
-| cliente_nome | String (opcional) | Nome do cliente |
-| usuario_id | FK (usuarios) | Barbeiro responsável |
-| servico_id | FK (servicos) | Serviço agendado |
-| data_hora_agendada | Timestamp | Data e hora agendada |
-| status | Enum (`agendado`, `concluido`, `cancelado`) | Status do agendamento |
+| client_name | String | Nome do cliente |
+| user_id | FK (users) | Barbeiro responsável |
+| service_id | FK (services) | Serviço agendado |
+| date_time | Timestamp | Data e hora agendada |
+| contact | String | Contato do cliente (opcional) |
+| notes | Text | Observações (opcional) |
+| status | Enum (`scheduled`, `completed`, `canceled`) | Status do agendamento |
 
 ---
 
@@ -104,6 +111,7 @@ Desenvolvido em React (frontend) e Flask ou FastAPI (backend), com banco de dado
 | Editar atendimentos | ❌ | ✅ |
 | Cadastrar serviços | ❌ | ✅ |
 | Cadastrar novos usuários | ❌ | ✅ |
+| Visualizar relatórios detalhados | ❌ | ✅ |
 
 ---
 
@@ -117,15 +125,15 @@ Desenvolvido em React (frontend) e Flask ou FastAPI (backend), com banco de dado
 ## 📋 Checklist de Funcionalidades
 
 - [x] Estrutura base do projeto (frontend e backend)
-- [x] Tela de Login
+- [x] Tela de Login com sistema de autenticação JWT
 - [x] Dashboard (resumo diário)
-- [ ] Cadastro de Atendimento (com desconto opcional)
-- [ ] Relatório de Atendimentos
-- [ ] Agenda de Agendamentos
-- [ ] Tela de Cadastro de Serviços
-- [ ] Controle de Caixa Diário
+- [x] Cadastro de Atendimento (com desconto opcional)
+- [x] Relatório de Atendimentos
+- [x] Agenda de Agendamentos
+- [x] Tela de Cadastro de Serviços
+- [x] Controle de Caixa Diário
 - [x] Permissões de Usuário
-- [x] Integração com Supabase (configuração inicial)
+- [x] Integração com Supabase (PostgreSQL)
 - [x] Design responsivo (Mobile First)
 
 ---
@@ -159,7 +167,10 @@ pip install -r requirements.txt
 ```
 
 5. Configurar variáveis de ambiente:
-   - Editar o arquivo `.env` com as configurações do Supabase
+   - Criar um arquivo `.env` com base no exemplo `.env.example`
+   - Definir a variável `DATABASE_URL` com a string de conexão do PostgreSQL
+   - Definir a variável `SECRET_KEY` para assinatura de tokens JWT
+   - Definir as configurações de CORS conforme necessário
 
 6. Iniciar o servidor:
 ```
@@ -181,7 +192,11 @@ cd frontend
 npm install
 ```
 
-3. Iniciar servidor de desenvolvimento:
+3. Configurar variáveis de ambiente:
+   - Criar um arquivo `.env.local` com base no exemplo `.env.example`
+   - Definir a variável `VITE_API_BASE_URL` apontando para o backend
+
+4. Iniciar servidor de desenvolvimento:
 ```
 npm run dev
 ```
@@ -190,9 +205,110 @@ O frontend estará disponível em: http://localhost:5173
 
 ---
 
+## 📖 Guia de Uso
+
+### Dashboard
+
+O Dashboard exibe um resumo dos atendimentos do dia atual, incluindo:
+- Total de atendimentos realizados
+- Faturamento total (valor original, descontos e valor final)
+- Distribuição por formas de pagamento
+- Próximos agendamentos do dia
+- Resumo por barbeiro (visível apenas para administradores)
+
+Cada usuário vê apenas seus próprios atendimentos, enquanto administradores têm acesso ao resumo de todos os barbeiros.
+
+### Atendimentos
+
+Na seção de Atendimentos você pode:
+- Visualizar todos os atendimentos do período selecionado
+- Registrar novos atendimentos
+- Aplicar descontos opcionais
+- Escolher forma de pagamento
+- Filtrar por data e barbeiro (apenas admin)
+
+### Serviços
+
+A página de Serviços permite:
+- Visualizar todos os serviços disponíveis (para todos os usuários)
+- Adicionar, editar ou remover serviços (apenas administradores)
+- Ver detalhes como nome, descrição, duração e preço
+
+### Agenda de Agendamentos
+
+Na página de Agenda você pode:
+1. Visualizar todos os agendamentos por data
+2. Filtrar agendamentos por data específica
+3. Adicionar novos agendamentos com:
+   - Nome do cliente
+   - Serviço desejado
+   - Data e hora
+   - Barbeiro responsável (administrador pode escolher qualquer barbeiro)
+4. Editar agendamentos existentes
+5. Cancelar agendamentos
+
+### Relatórios
+
+Na página de Relatórios você pode:
+1. Gerar relatórios detalhados com base em diferentes períodos:
+   - Diário: informações de um único dia
+   - Semanal: dados acumulados de uma semana
+   - Mensal: visão geral de um mês inteiro
+2. Visualizar gráficos e indicadores:
+   - Evolução do faturamento no período
+   - Distribuição por forma de pagamento
+   - Top 5 serviços mais realizados
+3. Filtrar os dados por barbeiro específico (apenas para administradores)
+
+---
+
 ## 📜 Autor
 
 Sistema desenvolvido para Fox Barbearia - Jardim Alegre, PR.  
-Projeto organizado por [Ueliton Fox](https://www.instagram.com/ueliton_fox).
+Projeto organizado por Ueliton Fox.
+
+---
+
+## Solução de Problemas
+
+### Problema: Tela preta na página de atendimentos
+
+Se você estiver vendo uma tela preta na página de atendimentos (http://localhost:5173/atendimentos), isso foi corrigido com a adição de melhor contraste nos elementos da página. 
+
+Para aplicar a correção:
+1. Certifique-se de que o frontend está rodando com a versão mais recente do código
+2. Se o problema persistir, limpe o cache do navegador (Ctrl+F5)
+
+### Problema: Páginas de relatórios e agenda não carregam dados do banco
+
+Se as páginas de relatórios e agenda não estiverem carregando os dados do banco de dados:
+
+1. **Verifique se o backend está rodando:**
+   ```
+   cd backend
+   python run.py
+   ```
+
+2. **Execute o diagnóstico do sistema:**
+   ```
+   cd backend
+   python check_api_health.py
+   ```
+
+3. **Verifique a conexão no frontend:**
+   - Observe o alerta de conexão no topo da página (se existir)
+   - Clique em "Tentar novamente" para reconectar
+
+4. **Possíveis soluções:**
+   - Reinicie tanto o backend quanto o frontend
+   - Verifique se o arquivo .env do backend tem as credenciais corretas
+   - Confira se o banco de dados Supabase está online
+
+### Troubleshooting geral:
+
+1. Limpe o cache do navegador (Ctrl+F5)
+2. Reinicie o backend: `cd backend && python run.py`
+3. Reinicie o frontend: `cd frontend && npm run dev`
+4. Verifique os logs no console do navegador para erros específicos
 
 ---
