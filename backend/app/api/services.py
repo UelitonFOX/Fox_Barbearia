@@ -1,67 +1,77 @@
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
-from app.db.database import get_db
-from app.models.service import Service
-from app.models.user import User
-from app.schemas.service import ServiceCreate, ServiceResponse, ServiceUpdate
-from app.core.deps import get_admin_user, get_current_user
+from backend.app.db.database import get_db
+from backend.app.models.service import ServiceModel, default_services
+from backend.app.models.service import Service as ServiceSchema
+from backend.app.models.service import ServiceCreate, ServiceUpdate
+from backend.app.core.deps import get_admin_user, get_current_user
+from backend.app.models.user import User
 
-router = APIRouter(prefix="/services", tags=["Serviços"])
+router = APIRouter(
+    tags=["Serviços"]
+)
 
-@router.post("/", response_model=ServiceResponse, status_code=201)
-def create_service(
-    service_in: ServiceCreate,
+@router.get("/", response_model=List[ServiceSchema])
+def read_services(
+    skip: int = 0,
+    limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_admin_user)  # Apenas admins
+    current_user = Depends(get_current_user)
 ):
     """
-    Criar um novo serviço (apenas admin)
+    Recuperar todos os serviços
     """
-    # Verificar se já existe serviço com este nome
-    existing_service = db.query(Service).filter(Service.name == service_in.name).first()
-    if existing_service:
+    try:
+        services = db.query(ServiceModel).offset(skip).limit(limit).all()
+        return services
+    except SQLAlchemyError as e:
+        print(f"Erro ao buscar serviços: {e}")
+        # Retorna uma lista vazia em caso de erro
+        return []
+
+@router.post("/", response_model=ServiceSchema)
+def create_service(
+    service: ServiceCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Cria um novo serviço.
+    Apenas administradores podem criar serviços.
+    """
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Apenas administradores podem criar serviços"
+        )
+    
+    try:
+        db_service = ServiceModel(**service.model_dump())
+        db.add(db_service)
+        db.commit()
+        db.refresh(db_service)
+        return db_service
+    except IntegrityError:
+        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Já existe um serviço com este nome"
         )
-    
-    # Criar serviço
-    db_service = Service(
-        name=service_in.name,
-        default_price=service_in.default_price
-    )
-    
-    db.add(db_service)
-    db.commit()
-    db.refresh(db_service)
-    
-    return db_service
 
-@router.get("/", response_model=List[ServiceResponse])
-def get_services(
-    skip: int = 0,
-    limit: int = 100,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)  # Qualquer usuário logado
-):
-    """
-    Listar todos os serviços
-    """
-    services = db.query(Service).offset(skip).limit(limit).all()
-    return services
-
-@router.get("/{service_id}", response_model=ServiceResponse)
+@router.get("/{service_id}", response_model=ServiceSchema)
 def get_service(
     service_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)  # Qualquer usuário logado
+    current_user: User = Depends(get_current_user)
 ):
     """
-    Obter serviço pelo ID
+    Retorna os detalhes de um serviço específico.
+    Qualquer usuário autenticado pode ver os detalhes.
     """
-    service = db.query(Service).filter(Service.id == service_id).first()
+    service = db.query(ServiceModel).filter(ServiceModel.id == service_id).first()
     if not service:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -69,50 +79,98 @@ def get_service(
         )
     return service
 
-@router.put("/{service_id}", response_model=ServiceResponse)
+@router.put("/{service_id}", response_model=ServiceSchema)
 def update_service(
     service_id: int,
-    service_in: ServiceUpdate,
+    service_update: ServiceUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_admin_user)  # Apenas admins
+    current_user: User = Depends(get_current_user)
 ):
     """
-    Atualizar serviço (apenas admin)
+    Atualiza um serviço existente.
+    Apenas administradores podem atualizar serviços.
     """
-    service = db.query(Service).filter(Service.id == service_id).first()
-    if not service:
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Apenas administradores podem atualizar serviços"
+        )
+
+    db_service = db.query(ServiceModel).filter(ServiceModel.id == service_id).first()
+    if not db_service:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Serviço não encontrado"
         )
     
-    # Atualizar dados
-    for field, value in service_in.model_dump(exclude_unset=True).items():
-        setattr(service, field, value)
-    
-    db.add(service)
-    db.commit()
-    db.refresh(service)
-    
-    return service
+    try:
+        update_data = service_update.model_dump(exclude_unset=True)
+        
+        for field, value in update_data.items():
+            setattr(db_service, field, value)
+        
+        db.commit()
+        db.refresh(db_service)
+        return db_service
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Já existe um serviço com este nome"
+        )
 
-@router.delete("/{service_id}", status_code=204)
+@router.delete("/{service_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_service(
     service_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_admin_user)  # Apenas admins
+    current_user: User = Depends(get_current_user)
 ):
     """
-    Excluir serviço (apenas admin)
+    Remove um serviço.
+    Apenas administradores podem remover serviços.
+    Na prática, apenas marca como inativo para manter histórico.
     """
-    service = db.query(Service).filter(Service.id == service_id).first()
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Apenas administradores podem remover serviços"
+        )
+
+    service = db.query(ServiceModel).filter(ServiceModel.id == service_id).first()
     if not service:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Serviço não encontrado"
         )
     
-    db.delete(service)
+    service.is_active = False
     db.commit()
+
+@router.post("/initialize", status_code=status.HTTP_201_CREATED)
+def initialize_services(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Inicializa a tabela de serviços com os valores padrão.
+    Apenas administradores podem inicializar os serviços.
+    """
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Apenas administradores podem inicializar serviços"
+        )
     
-    return None 
+    try:
+        for service_data in default_services:
+            if not db.query(ServiceModel).filter(ServiceModel.name == service_data["name"]).first():
+                db_service = ServiceModel(**service_data)
+                db.add(db_service)
+        db.commit()
+        return {"message": "Serviços inicializados com sucesso"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro ao inicializar serviços: {str(e)}"
+        ) 
