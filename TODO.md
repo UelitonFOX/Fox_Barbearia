@@ -27,6 +27,8 @@
 - [ ] Melhorar documentação da API
 - [ ] Otimizar consultas ao banco de dados
 - [ ] Implementar migrations com Alembic
+- [x] Scripts utilitários para manutenção do banco de dados
+- [x] Ferramentas de diagnóstico e debug
 
 ---
 
@@ -108,6 +110,7 @@
 - [x] Correção na resposta de autenticação
 - [x] Tratamento de erros consistente no frontend
 - [x] Melhorias de contraste na página de Agenda
+- [x] Scripts automáticos para manutenção e correção do banco
 
 ---
 

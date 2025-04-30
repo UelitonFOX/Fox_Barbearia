@@ -205,6 +205,35 @@ O frontend estará disponível em: http://localhost:5173
 
 ---
 
+## 🛠️ Utilitários e Manutenção
+
+O sistema inclui diversos scripts utilitários para manutenção e desenvolvimento:
+
+### Scripts de Banco de Dados
+- `add_columns.py` - Adiciona novas colunas a tabelas existentes
+- `check_columns.py` - Verifica a estrutura das tabelas
+- `fix_database.py` - Corrige problemas estruturais no banco de dados
+- `recreate_appointments.py` - Recria a tabela de agendamentos
+
+### Scripts de Dados
+- `create_admin_custom.py` - Cria um usuário administrador personalizado
+- `create_test_attendance.py` - Gera atendimentos de teste
+- `insert_services.py` - Popula a tabela de serviços
+- `update_admin_password.py` - Atualiza a senha do administrador
+
+### Scripts de Teste e Debug
+- `test_api.py` - Testa a comunicação com a API
+- `test_db_connection.py` - Verifica a conexão com o banco de dados
+- `debug_api.py` - Ferramenta para depuração de endpoints
+
+Para executar qualquer script, use o comando:
+```
+cd backend
+python nome_do_script.py
+```
+
+---
+
 ## 📖 Guia de Uso
 
 ### Dashboard
